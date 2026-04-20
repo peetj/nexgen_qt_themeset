@@ -24,7 +24,13 @@ ThemeManager::ThemeManager(QObject* parent) : QObject(parent) {}
 
 void ThemeManager::load(QSettings& s) {
   s.beginGroup(kGroup);
-  m_mode = static_cast<ThemeMode>(s.value(kKeyMode, static_cast<int>(ThemeMode::System)).toInt());
+  const int modeRaw = s.value(kKeyMode, static_cast<int>(ThemeMode::System)).toInt();
+  if (modeRaw < static_cast<int>(ThemeMode::System) || modeRaw > static_cast<int>(ThemeMode::Dark)) {
+    m_mode = ThemeMode::System;
+    s.setValue(kKeyMode, static_cast<int>(m_mode));
+  } else {
+    m_mode = static_cast<ThemeMode>(modeRaw);
+  }
   m_themeId = ThemeId{ s.value(kKeyThemeId, QStringLiteral("default")).toString() };
   s.endGroup();
 }
@@ -82,7 +88,13 @@ QPalette ThemeManager::buildPalette() const {
     return p;
   } else {
     QPalette p;
-    // Light: largely default, but set a consistent highlight.
+    // Light: set a slightly translucent window so WA_TranslucentBackground looks intentional.
+    p.setColor(QPalette::Window, QColor(255,255,255,210));
+    p.setColor(QPalette::WindowText, QColor(20,20,20));
+    p.setColor(QPalette::ButtonText, QColor(20,20,20));
+    p.setColor(QPalette::Text, QColor(20,20,20));
+
+    // Light: consistent highlight.
     p.setColor(QPalette::Highlight, QColor(40, 120, 255));
     p.setColor(QPalette::HighlightedText, QColor(255, 255, 255));
     return p;
